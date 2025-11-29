@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
-from .converter import convert_to_bdf, convert_to_pcf, generate_subset_font
+from .converter import convert_to_bdf, convert_to_pcf, fix_bdf_encodings, generate_subset_font
 from .utils import check_character_coverage
 
 if TYPE_CHECKING:
@@ -109,6 +109,14 @@ def generate_font(
             subset_ttf.unlink()
             if logger:
                 logger.warn(f"Skipping size {size}pt due to BDF conversion failure")
+            continue
+
+        # Fix BDF encodings (Issue #1: ensure Unicode codepoints are correct)
+        if not fix_bdf_encodings(str(bdf_path), chars, logger):
+            subset_ttf.unlink()
+            bdf_path.unlink()
+            if logger:
+                logger.warn(f"Skipping size {size}pt due to BDF encoding fix failure")
             continue
 
         if keep_bdf:

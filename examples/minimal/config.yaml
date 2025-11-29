@@ -11,6 +11,6 @@ characters:
 
 output:
   directory: "output"
-  formats: ["pcf"]
+  formats: ["bdf", "pcf"]
   metadata: true
   font_family: "digits"
