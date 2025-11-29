@@ -127,12 +127,6 @@ def fix_bdf_encodings(
         char_list = sorted(list(chars))
         codepoints = [ord(c) for c in char_list]
 
-        if logger and logger.debug:
-            logger.debug(
-                f"Fixing BDF encodings: {len(codepoints)} characters, "
-                f"codepoints {codepoints[0]}-{codepoints[-1]}"
-            )
-
         # Read BDF file
         with open(bdf_path, "r") as f:
             lines = f.readlines()
@@ -163,12 +157,6 @@ def fix_bdf_encodings(
         # Write fixed BDF
         with open(bdf_path, "w") as f:
             f.writelines(output_lines)
-
-        if logger:
-            if fixed_count > 0:
-                logger.debug(f"Fixed {fixed_count} ENCODING values in BDF")
-            else:
-                logger.debug("BDF encodings already correct (no changes needed)")
 
         return True
 
