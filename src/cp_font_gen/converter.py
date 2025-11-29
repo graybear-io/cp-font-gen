@@ -104,6 +104,80 @@ def generate_subset_font(
         return False, 0
 
 
+def fix_bdf_encodings(
+    bdf_path: str, chars: set[str], logger: Optional["GenerationLogger"] = None
+) -> bool:
+    """Fix ENCODING values in BDF to match Unicode codepoints.
+
+    Issue #1: fontTools.subset may create subset fonts with sequential
+    glyph mappings (1, 2, 3...) instead of preserving Unicode codepoints
+    (48, 49, 50... for '0', '1', '2'...). This fixes the BDF by replacing
+    ENCODING values with the correct Unicode codepoints.
+
+    Args:
+        bdf_path: Path to BDF file to fix
+        chars: Set of characters that should be in the font
+        logger: Optional GenerationLogger for verbose output
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Convert chars to sorted list of Unicode codepoints
+        char_list = sorted(list(chars))
+        codepoints = [ord(c) for c in char_list]
+
+        if logger and logger.debug:
+            logger.debug(
+                f"Fixing BDF encodings: {len(codepoints)} characters, "
+                f"codepoints {codepoints[0]}-{codepoints[-1]}"
+            )
+
+        # Read BDF file
+        with open(bdf_path, "r") as f:
+            lines = f.readlines()
+
+        # Fix ENCODING values
+        output_lines = []
+        codepoint_idx = 0
+        fixed_count = 0
+
+        for line in lines:
+            if line.startswith("ENCODING "):
+                # Replace with correct Unicode codepoint
+                if codepoint_idx < len(codepoints):
+                    old_encoding = int(line.split()[1])
+                    new_encoding = codepoints[codepoint_idx]
+
+                    if old_encoding != new_encoding:
+                        fixed_count += 1
+
+                    output_lines.append(f"ENCODING {new_encoding}\n")
+                    codepoint_idx += 1
+                else:
+                    # Out of range - keep original (shouldn't happen)
+                    output_lines.append(line)
+            else:
+                output_lines.append(line)
+
+        # Write fixed BDF
+        with open(bdf_path, "w") as f:
+            f.writelines(output_lines)
+
+        if logger:
+            if fixed_count > 0:
+                logger.debug(f"Fixed {fixed_count} ENCODING values in BDF")
+            else:
+                logger.debug("BDF encodings already correct (no changes needed)")
+
+        return True
+
+    except Exception as e:
+        if logger:
+            logger.error(f"Failed to fix BDF encodings: {str(e)}")
+        return False
+
+
 def convert_to_bdf(
     ttf_path: str, bdf_path: str, size: int, logger: Optional["GenerationLogger"] = None
 ) -> bool:
