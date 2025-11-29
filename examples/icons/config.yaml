@@ -1,0 +1,34 @@
+# Unicode Icons/Symbols Example
+# Perfect for: Status indicators, weather displays, navigation
+
+source_font: "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+
+sizes:
+  - 24  # Large icons
+
+characters:
+  unicode_ranges:
+    # Arrows
+    - "U+2190-2193"  # ← ↑ → ↓
+    - "U+21B0-21B3"  # ↰ ↱ ↲ ↳
+
+    # Weather symbols
+    - "U+2600-2603"  # ☀ ☁ ☂ ☃
+    - "U+2614"       # ☔
+    - "U+26C4-26C5"  # ⛄ ⛅
+
+    # Common symbols
+    - "U+2713-2714"  # ✓ ✔ Checkmarks
+    - "U+2717-2718"  # ✗ ✘ X marks
+    - "U+2022"       # • Bullet
+    - "U+25CF"       # ● Filled circle
+    - "U+25CB"       # ○ Empty circle
+
+    # Musical notes (fun!)
+    - "U+266A-266B"  # ♪ ♫
+
+output:
+  directory: "output"
+  formats: ["pcf"]
+  metadata: true
+  font_family: "icons"

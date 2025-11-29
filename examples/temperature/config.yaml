@@ -1,0 +1,23 @@
+# Temperature Display Example
+# Perfect for: Weather stations, thermometers, environmental sensors
+
+source_font: "/System/Library/Fonts/Helvetica.ttc"
+
+sizes:
+  - 20  # Large and readable
+
+characters:
+  inline: "0123456789.-°CF "
+  # Includes:
+  # - Digits: 0-9
+  # - Decimal point: .
+  # - Minus sign: - (for negative temps)
+  # - Degree symbol: °
+  # - Celsius/Fahrenheit: C F
+  # - Space for formatting
+
+output:
+  directory: "output"
+  formats: ["pcf"]
+  metadata: true
+  font_family: "temp"

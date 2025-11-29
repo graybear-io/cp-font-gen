@@ -1,0 +1,17 @@
+# Menu System Example
+# Perfect for: Interactive menus, settings screens, user interfaces
+
+source_font: "/System/Library/Fonts/Helvetica.ttc"
+
+sizes:
+  - 12  # Body text
+  - 16  # Headers
+
+characters:
+  file: "chars.txt"  # Load from file for readability
+
+output:
+  directory: "output"
+  formats: ["pcf"]
+  metadata: true
+  font_family: "menu"

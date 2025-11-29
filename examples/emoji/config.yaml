@@ -1,0 +1,18 @@
+# Emoji Example
+# Perfect for: Status displays, fun UI elements, visual indicators
+
+# macOS emoji font (adjust path for your system)
+source_font: "/System/Library/Fonts/Apple Color Emoji.ttc"
+
+sizes:
+  - 32
+
+characters:
+  # Load emoji from file
+  file: "chars.txt"
+
+output:
+  directory: "output"
+  formats: ["pcf"]
+  metadata: true
+  font_family: "emoji"

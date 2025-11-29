@@ -1,0 +1,23 @@
+# Multilingual Example
+# Perfect for: International displays, language learning, travel devices
+
+source_font: "/System/Library/Fonts/Helvetica.ttc"
+
+sizes:
+  - 14
+
+characters:
+  # Load basic characters from file
+  file: "chars.txt"
+
+  # Can also specify additional ranges
+  # unicode_ranges:
+  #   - "U+0400-04FF"  # Cyrillic
+  #   - "U+3040-309F"  # Hiragana
+  #   - "U+4E00-9FFF"  # CJK (Chinese/Japanese/Korean) - large!
+
+output:
+  directory: "output"
+  formats: ["pcf"]
+  metadata: true
+  font_family: "multi"

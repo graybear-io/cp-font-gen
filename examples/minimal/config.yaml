@@ -1,0 +1,16 @@
+# Minimal Example: Digits Only
+# Perfect for: Simple counters, numeric displays, clocks
+
+source_font: "/System/Library/Fonts/Helvetica.ttc"
+
+sizes:
+  - 16
+
+characters:
+  inline: "0123456789"
+
+output:
+  directory: "output"
+  formats: ["pcf"]
+  metadata: true
+  font_family: "digits"

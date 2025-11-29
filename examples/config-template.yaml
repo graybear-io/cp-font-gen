@@ -1,0 +1,207 @@
+# ============================================================================
+# cp-font-gen Configuration Template
+# ============================================================================
+# This file documents all available configuration options for cp-font-gen.
+# Copy this file and customize it for your project.
+#
+# Minimal example: See examples/minimal/config.yaml
+# Full examples: See examples/ directory
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# SOURCE FONT (Required)
+# ----------------------------------------------------------------------------
+# Path to the source font file (TrueType or OpenType)
+# - Can be .ttf, .otf, or .ttc (TrueType Collection)
+# - Use absolute paths or paths relative to this config file
+# - Common system fonts:
+#   macOS: /System/Library/Fonts/
+#   Linux: /usr/share/fonts/
+#   Windows: C:\Windows\Fonts\
+#
+# For Unicode symbols (arrows, weather, etc.), use fonts like:
+# - /System/Library/Fonts/Supplemental/Arial Unicode.ttf (macOS)
+# - /usr/share/fonts/truetype/unifont/unifont.ttf (Linux)
+source_font: "/System/Library/Fonts/Helvetica.ttc"
+
+# ----------------------------------------------------------------------------
+# FONT SIZES (Required)
+# ----------------------------------------------------------------------------
+# List of font sizes to generate (in points)
+# - Typical CircuitPython sizes: 12, 14, 16, 24
+# - Smaller sizes (8, 10) work for low-res displays
+# - Larger sizes (32, 48) good for titles/headers
+sizes:
+  - 12  # Small text
+  - 16  # Medium text
+  - 24  # Large text
+
+# ----------------------------------------------------------------------------
+# CHARACTERS (Required)
+# ----------------------------------------------------------------------------
+# Define which characters to include in the font
+# You can combine multiple methods:
+characters:
+  # Method 1: Inline characters (convenient for small sets)
+  inline: "0123456789"
+
+  # Method 2: Load from file (good for large character sets)
+  # - Path can be absolute or relative to this config file
+  # - File should be UTF-8 encoded text
+  file: "chars.txt"
+
+  # Method 3: Unicode ranges (perfect for symbol sets)
+  unicode_ranges:
+    # Common ranges:
+    - "U+0030-0039"  # Digits 0-9
+    - "U+0041-005A"  # Uppercase A-Z
+    - "U+0061-007A"  # Lowercase a-z
+    - "U+0020"       # Space
+
+    # Extended ranges (examples):
+    # - "U+00A0-00FF"  # Latin-1 Supplement (é, ñ, ü, etc.)
+    # - "U+2190-2193"  # Arrows (← ↑ → ↓)
+    # - "U+2600-2603"  # Weather symbols (☀ ☁ ☂ ☃)
+    # - "U+2713-2714"  # Checkmarks (✓ ✔)
+    # - "U+2717-2718"  # X marks (✗ ✘)
+    # - "U+25A0-25FF"  # Geometric shapes
+    # - "U+2022"       # Bullet (•)
+
+# ----------------------------------------------------------------------------
+# CHARACTER PROCESSING OPTIONS (Optional)
+# ----------------------------------------------------------------------------
+# Control how characters are processed
+
+# Remove duplicate characters (default: true)
+# Set to false to keep all characters as specified
+deduplicate_chars: true
+
+# Remove whitespace characters except space (default: false)
+# Useful if you're loading from files that might have newlines/tabs
+strip_whitespace: false
+
+# ----------------------------------------------------------------------------
+# OUTPUT CONFIGURATION (Required)
+# ----------------------------------------------------------------------------
+output:
+  # Output directory (relative to project root or absolute)
+  # - Relative paths are resolved from the tool's default output location
+  # - A subdirectory will be created using the font_family name
+  directory: "output"
+
+  # Font family name (used for output filenames and subdirectory)
+  # Example: "digits" creates output/digits/digits-16pt.pcf
+  font_family: "custom"
+
+  # Output formats (list of formats to generate)
+  # Available formats:
+  # - "pcf": Portable Compiled Format (required for CircuitPython)
+  # - "bdf": Bitmap Distribution Format (human-readable, larger files)
+  #
+  # Note: BDF is always generated as an intermediate format for PCF
+  # but is only kept in output if explicitly listed here
+  formats:
+    - "pcf"  # Always include this for CircuitPython
+    # - "bdf"  # Uncomment to also keep BDF files
+
+  # Generate metadata manifest (default: true)
+  # Creates a JSON file with details about the generated fonts:
+  # - Character list and unicode ranges
+  # - Source font information
+  # - File sizes and formats
+  # - Debug information (when using --debug mode)
+  metadata: true
+
+# ----------------------------------------------------------------------------
+# LOGGING OPTIONS (Optional)
+# ----------------------------------------------------------------------------
+# Control logging verbosity during font generation
+# These can be overridden by CLI flags (--verbose, --debug)
+#
+# Available levels:
+# - "default": Minimal output, shows errors and summary
+# - "verbose": Detailed progress, shows each step and warnings
+# - "debug": Everything including character coverage analysis
+#            and debug info saved to manifest
+#
+# If not specified, defaults to "default"
+# CLI flags override this setting:
+#   --verbose sets level to "verbose"
+#   --debug sets level to "debug"
+logging:
+  level: "default"  # Options: "default", "verbose", "debug"
+
+# ============================================================================
+# USAGE EXAMPLES
+# ============================================================================
+#
+# Generate fonts with this config:
+#   uv run cp-font-gen generate --config config.yaml
+#
+# Preview characters without generating:
+#   uv run cp-font-gen show --config config.yaml
+#
+# Dry run (see what would be generated):
+#   uv run cp-font-gen generate --config config.yaml --dry-run
+#
+# Verbose output (see detailed progress):
+#   uv run cp-font-gen generate --config config.yaml --verbose
+#
+# Debug mode (see everything + save debug info):
+#   uv run cp-font-gen generate --config config.yaml --debug
+#
+# Check if required tools are installed:
+#   uv run cp-font-gen check
+#
+# ============================================================================
+# COMMON PATTERNS
+# ============================================================================
+#
+# 1. Temperature Display (digits + degree symbol + units)
+#    characters:
+#      inline: "0123456789.°CF"
+#
+# 2. Menu System (letters + basic punctuation)
+#    characters:
+#      unicode_ranges:
+#        - "U+0041-005A"  # A-Z
+#        - "U+0061-007A"  # a-z
+#        - "U+0020"       # Space
+#      inline: ":-_()[]"
+#
+# 3. Multilingual Text (include accented characters)
+#    characters:
+#      unicode_ranges:
+#        - "U+0041-005A"  # A-Z
+#        - "U+0061-007A"  # a-z
+#        - "U+00C0-00FF"  # À-ÿ (accented Latin)
+#        - "U+0020"       # Space
+#
+# 4. Icon Font (symbols only)
+#    characters:
+#      unicode_ranges:
+#        - "U+2190-2193"  # Arrows
+#        - "U+2600-2603"  # Weather
+#        - "U+2713-2714"  # Checkmarks
+#
+# ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+#
+# Problem: "No font files were generated"
+# Solution: Use --debug to see which characters are missing from source font
+#           Try a Unicode font like Arial Unicode.ttf
+#
+# Problem: "otf2bdf: no glyphs generated"
+# Solution: Your source font doesn't contain the requested characters
+#           Use --debug to see character coverage analysis
+#
+# Problem: Font looks wrong on CircuitPython device
+# Solution: Make sure you're using PCF format (not BDF)
+#           Check that the font size is appropriate for your display
+#
+# Problem: Characters appear as boxes on device
+# Solution: The characters aren't in the generated font
+#           Use --debug to verify which characters were included
+#
+# ============================================================================
