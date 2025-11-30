@@ -9,25 +9,39 @@ These items are prioritized and tracked for implementation after documentation r
 
 ## TODO: Improve Test Coverage for cp-font-gen
 **Priority**: Code Quality (High Value - ~1-2 days)
+**Branch**: `test-refactoring` (in progress)
 
-**Goal**: Increase test coverage from current 12% to at least 70%+
+**Goal**: Increase test coverage from current 29% to at least 70%+
 
-**Current Coverage** (as of restructure completion):
+**Current Status** (as of test refactoring - 2025-11-29):
+- **Overall**: 29% (16 passed, 1 failed, 1 skipped)
+- **Test Structure**: ✅ Refactored and organized
+  - `conftest.py` - Shared fixtures and helpers
+  - `test_converter.py` - Converter unit tests (5 tests)
+  - `test_generator.py` - Generator integration tests (2 tests)
+  - `test_config.py` - Config tests (4 tests)
+  - `test_utils.py` - Utility tests (4 tests)
+  - `test_unicode.py` - Unicode tests (3 tests)
+
+**Module Coverage**:
 - **config.py**: 89% ✅ (Good coverage)
+- **generator.py**: 69% ✅ (Was 12%, improved by Issue #1 tests)
+- **converter.py**: 49% ⚠️ (Was 9%, improved by Issue #1 tests)
 - **utils.py**: 35% ⚠️ (Needs improvement)
-- **generator.py**: 12% ❌ (Critical - needs tests)
-- **converter.py**: 9% ❌ (Critical - needs tests)
 - **checker.py**: 0% ❌ (No tests)
 - **cli.py**: 0% ❌ (No tests)
 - **logger.py**: 0% ❌ (No tests)
+- **tool_config.py**: 0% ❌ (No tests)
 
 **Focus Areas**:
-1. **generator.py** - Core orchestration logic needs comprehensive tests
-2. **converter.py** - Font conversion pipeline needs unit tests
-3. **checker.py** - Tool validation logic needs tests
-4. **utils.py** - Increase coverage on utility functions
-5. **cli.py** - Add integration tests for CLI commands
-6. **logger.py** - Test logging functionality
+1. **cli.py** (0%) - Add integration tests for CLI commands
+2. **checker.py** (0%) - Tool validation logic needs tests
+3. **logger.py** (0%) - Test logging functionality
+4. **tool_config.py** (0%) - Test configuration management
+5. **converter.py** (49%) - Expand coverage of error paths and edge cases
+6. **utils.py** (35%) - Increase coverage on utility functions
+7. **generator.py** (69%) - Add tests for remaining edge cases
+8. **Fix failing test** - `test_generate_font_with_letters_has_correct_encodings` needs investigation
 
 **Implementation**:
 - Write unit tests for each module
