@@ -1,11 +1,10 @@
 """Shared test fixtures and helpers for cp-font-gen tests."""
 
-import pytest
-
 
 # =============================================================================
 # BDF Test Helpers (from Issue #1)
 # =============================================================================
+
 
 def extract_bdf_encodings(bdf_path):
     """Extract ENCODING values from a BDF file.
@@ -13,7 +12,7 @@ def extract_bdf_encodings(bdf_path):
     Originally from Issue #1 test suite - helper for verifying BDF character encodings.
     """
     encodings = []
-    with open(bdf_path, "r") as f:
+    with open(bdf_path) as f:
         for line in f:
             if line.startswith("ENCODING "):
                 encoding = int(line.split()[1])

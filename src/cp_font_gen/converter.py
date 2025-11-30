@@ -124,11 +124,11 @@ def fix_bdf_encodings(
     """
     try:
         # Convert chars to sorted list of Unicode codepoints
-        char_list = sorted(list(chars))
+        char_list = sorted(chars)
         codepoints = [ord(c) for c in char_list]
 
         # Read BDF file
-        with open(bdf_path, "r") as f:
+        with open(bdf_path) as f:
             lines = f.readlines()
 
         # Fix ENCODING values

@@ -5,13 +5,19 @@ for the BDF encoding bug (Issue #1).
 """
 
 import os
+from unittest import mock
 
 import pytest
 
-from cp_font_gen.converter import convert_to_bdf, fix_bdf_encodings, generate_subset_font
+from cp_font_gen.converter import (
+    convert_to_bdf,
+    convert_to_pcf,
+    fix_bdf_encodings,
+    generate_subset_font,
+)
+from cp_font_gen.logger import GenerationLogger
 
 from .conftest import create_test_bdf_with_wrong_encodings, extract_bdf_encodings
-
 
 # =============================================================================
 # Unit Tests: fix_bdf_encodings() Function
@@ -207,3 +213,246 @@ def test_issue_1_regression_old_generated_fonts_have_bug():
             f"Expected either {expected_bug} (bug) or {expected_fixed} (fixed)\n"
             f"Got: {encodings}"
         )
+
+
+# =============================================================================
+# Additional Coverage Tests
+# =============================================================================
+
+
+class TestConvertToPcf:
+    """Tests for convert_to_pcf function."""
+
+    def test_convert_to_pcf_success(self, tmp_path):
+        """Test successful BDF to PCF conversion."""
+        # First create a BDF file
+        source_font = "/System/Library/Fonts/Helvetica.ttc"
+        if not os.path.exists(source_font):
+            pytest.skip("System font not available")
+
+        chars = set("ABC")
+        subset_ttf = tmp_path / "subset.ttf"
+
+        # Create subset and convert to BDF
+        success, _ = generate_subset_font(str(source_font), chars, str(subset_ttf))
+        if not success:
+            pytest.skip("Subset generation failed")
+
+        bdf_file = tmp_path / "test.bdf"
+        success = convert_to_bdf(str(subset_ttf), str(bdf_file), size=16)
+        if not success:
+            pytest.skip("BDF conversion failed")
+
+        # Now test PCF conversion
+        pcf_file = tmp_path / "test.pcf"
+        result = convert_to_pcf(str(bdf_file), str(pcf_file))
+
+        assert result is True
+        assert pcf_file.exists()
+        assert pcf_file.stat().st_size > 0
+
+    def test_convert_to_pcf_with_logger(self, tmp_path):
+        """Test PCF conversion with logger."""
+        # Create a complete BDF file with all required properties
+        bdf_file = tmp_path / "test.bdf"
+        with open(bdf_file, "w") as f:
+            f.write("STARTFONT 2.1\n")
+            f.write("FONT -test-font\n")
+            f.write("SIZE 16 100 100\n")
+            f.write("FONTBOUNDINGBOX 10 16 0 -2\n")
+            f.write("STARTPROPERTIES 2\n")
+            f.write("FONT_ASCENT 14\n")
+            f.write("FONT_DESCENT 2\n")
+            f.write("ENDPROPERTIES\n")
+            f.write("CHARS 3\n")
+            # Add 3 characters
+            for i in range(3):
+                f.write(f"STARTCHAR char{i}\n")
+                f.write(f"ENCODING {ord('A') + i}\n")
+                f.write("SWIDTH 500 0\n")
+                f.write("DWIDTH 10 0\n")
+                f.write("BBX 10 16 0 -2\n")
+                f.write("BITMAP\n")
+                f.write("00\n" * 16)
+                f.write("ENDCHAR\n")
+            f.write("ENDFONT\n")
+
+        pcf_file = tmp_path / "test.pcf"
+        logger = GenerationLogger(verbose=True)
+
+        result = convert_to_pcf(str(bdf_file), str(pcf_file), logger)
+
+        assert result is True
+        assert pcf_file.exists()
+
+    def test_convert_to_pcf_nonexistent_bdf(self, tmp_path):
+        """Test PCF conversion with nonexistent BDF file."""
+        bdf_file = tmp_path / "nonexistent.bdf"
+        pcf_file = tmp_path / "test.pcf"
+        logger = GenerationLogger()
+
+        result = convert_to_pcf(str(bdf_file), str(pcf_file), logger)
+
+        assert result is False
+        # Note: PCF file may be created but will be empty/corrupt
+        # The important part is that the function returns False
+
+    @mock.patch("subprocess.run")
+    def test_convert_to_pcf_command_not_found(self, mock_run, tmp_path):
+        """Test PCF conversion when bdftopcf command not found."""
+        mock_run.side_effect = FileNotFoundError("bdftopcf not found")
+
+        bdf_file = tmp_path / "test.bdf"
+        create_test_bdf_with_wrong_encodings(bdf_file, num_chars=3)
+
+        pcf_file = tmp_path / "test.pcf"
+        logger = GenerationLogger()
+
+        result = convert_to_pcf(str(bdf_file), str(pcf_file), logger)
+
+        assert result is False
+        assert len(logger.errors) > 0
+
+
+class TestGenerateSubsetFont:
+    """Additional tests for generate_subset_font function."""
+
+    def test_with_verbose_logger(self, tmp_path):
+        """Test generate_subset_font with verbose logger."""
+        source_font = "/System/Library/Fonts/Helvetica.ttc"
+        if not os.path.exists(source_font):
+            pytest.skip("System font not available")
+
+        chars = set("ABC")
+        output = tmp_path / "subset.ttf"
+        logger = GenerationLogger(verbose=True, debug=True)
+
+        success, num_glyphs = generate_subset_font(str(source_font), chars, str(output), logger)
+
+        assert success is True
+        assert num_glyphs > 0
+        assert output.exists()
+
+    def test_with_invalid_font_path(self, tmp_path):
+        """Test generate_subset_font with invalid font."""
+        chars = set("ABC")
+        output = tmp_path / "subset.ttf"
+        logger = GenerationLogger()
+
+        success, num_glyphs = generate_subset_font(
+            "/nonexistent/font.ttf", chars, str(output), logger
+        )
+
+        assert success is False
+        assert num_glyphs == 0
+        assert len(logger.errors) > 0
+
+    def test_with_few_glyphs_warning(self, tmp_path):
+        """Test that logger warns when very few glyphs are produced."""
+        source_font = "/System/Library/Fonts/Helvetica.ttc"
+        if not os.path.exists(source_font):
+            pytest.skip("System font not available")
+
+        # Request many unlikely characters
+        unlikely_chars = {chr(i) for i in range(0x1F600, 0x1F604)}  # emojis
+        output = tmp_path / "subset.ttf"
+        logger = GenerationLogger(verbose=True)
+
+        success, num_glyphs = generate_subset_font(
+            str(source_font), unlikely_chars, str(output), logger
+        )
+
+        # May succeed but produce very few glyphs
+        if success and num_glyphs < len(unlikely_chars) * 0.5:
+            # Should have warned
+            assert len(logger.warnings) > 0
+
+
+class TestConvertToBdf:
+    """Additional tests for convert_to_bdf function."""
+
+    def test_with_verbose_logger(self, tmp_path):
+        """Test convert_to_bdf with verbose logger."""
+        source_font = "/System/Library/Fonts/Helvetica.ttc"
+        if not os.path.exists(source_font):
+            pytest.skip("System font not available")
+
+        # Use 10 characters to avoid otf2bdf issues with very small subsets
+        chars = set("1234567890")
+        subset_ttf = tmp_path / "subset.ttf"
+
+        success, _ = generate_subset_font(str(source_font), chars, str(subset_ttf))
+        if not success:
+            pytest.skip("Subset generation failed")
+
+        bdf_file = tmp_path / "test.bdf"
+        logger = GenerationLogger(verbose=True, debug=True)
+
+        result = convert_to_bdf(str(subset_ttf), str(bdf_file), size=16, logger=logger)
+
+        assert result is True
+        assert bdf_file.exists()
+
+    def test_with_nonexistent_ttf(self, tmp_path):
+        """Test convert_to_bdf with nonexistent TTF file."""
+        bdf_file = tmp_path / "test.bdf"
+        logger = GenerationLogger()
+
+        result = convert_to_bdf("/nonexistent/font.ttf", str(bdf_file), size=16, logger=logger)
+
+        assert result is False
+        assert not bdf_file.exists()
+
+    @mock.patch("subprocess.run")
+    def test_otf2bdf_command_not_found(self, mock_run, tmp_path):
+        """Test convert_to_bdf when otf2bdf command not found."""
+        mock_run.side_effect = FileNotFoundError("otf2bdf not found")
+
+        bdf_file = tmp_path / "test.bdf"
+        logger = GenerationLogger()
+
+        result = convert_to_bdf("/some/font.ttf", str(bdf_file), size=16, logger=logger)
+
+        assert result is False
+        assert len(logger.errors) > 0
+
+
+class TestFixBdfEncodings:
+    """Additional tests for fix_bdf_encodings error handling."""
+
+    def test_with_verbose_logger(self, tmp_path):
+        """Test fix_bdf_encodings with verbose logger."""
+        bdf_file = tmp_path / "test.bdf"
+        create_test_bdf_with_wrong_encodings(bdf_file, num_chars=5)
+
+        chars = set("01234")
+        logger = GenerationLogger(verbose=True)
+
+        result = fix_bdf_encodings(str(bdf_file), chars, logger)
+
+        assert result is True
+
+    def test_with_nonexistent_file(self, tmp_path):
+        """Test fix_bdf_encodings with nonexistent file."""
+        bdf_file = tmp_path / "nonexistent.bdf"
+        chars = set("ABC")
+        logger = GenerationLogger()
+
+        result = fix_bdf_encodings(str(bdf_file), chars, logger)
+
+        assert result is False
+        assert len(logger.errors) > 0
+
+    def test_with_invalid_bdf_content(self, tmp_path):
+        """Test fix_bdf_encodings with invalid BDF content."""
+        bdf_file = tmp_path / "invalid.bdf"
+        with open(bdf_file, "w") as f:
+            f.write("Not a valid BDF file\n")
+
+        chars = set("ABC")
+        logger = GenerationLogger()
+
+        result = fix_bdf_encodings(str(bdf_file), chars, logger)
+
+        # Should handle gracefully
+        assert result is True  # It will "fix" the file even if malformed
