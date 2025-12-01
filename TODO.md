@@ -7,48 +7,46 @@ These items are prioritized and tracked for implementation after documentation r
 
 ---
 
-## TODO: Improve Test Coverage for cp-font-gen
-**Priority**: Code Quality (High Value - ~1-2 days)
-**Branch**: `test-refactoring` (in progress)
+## ✅ COMPLETED: Test Refactoring (2025-11-29)
+Successfully refactored and expanded test coverage from 29% → 67%
+- Created comprehensive test files: test_checker.py, test_converter.py, test_generator.py, test_logger.py, test_tool_config.py
+- All core modules now have 82-100% coverage
+- 113 tests passing
 
-**Goal**: Increase test coverage from current 29% to at least 70%+
+---
 
-**Current Status** (as of test refactoring - 2025-11-29):
-- **Overall**: 29% (16 passed, 1 failed, 1 skipped)
-- **Test Structure**: ✅ Refactored and organized
-  - `conftest.py` - Shared fixtures and helpers
-  - `test_converter.py` - Converter unit tests (5 tests)
-  - `test_generator.py` - Generator integration tests (2 tests)
-  - `test_config.py` - Config tests (4 tests)
-  - `test_utils.py` - Utility tests (4 tests)
-  - `test_unicode.py` - Unicode tests (3 tests)
+## TODO: Add CLI Integration Tests
+**Priority**: Code Quality (Final Push - ~1 day)
+
+**Goal**: Reach 70%+ overall coverage by testing cli.py
+
+**Current Status** (as of 2025-11-29):
+- **Overall**: 67% (113 passed, 2 skipped)
+- **Remaining untested**: cli.py (143 statements, 0% coverage)
 
 **Module Coverage**:
-- **config.py**: 89% ✅ (Good coverage)
-- **generator.py**: 69% ✅ (Was 12%, improved by Issue #1 tests)
-- **converter.py**: 49% ⚠️ (Was 9%, improved by Issue #1 tests)
-- **utils.py**: 35% ⚠️ (Needs improvement)
-- **checker.py**: 0% ❌ (No tests)
-- **cli.py**: 0% ❌ (No tests)
-- **logger.py**: 0% ❌ (No tests)
-- **tool_config.py**: 0% ❌ (No tests)
+- **logger.py**: 100% ✅
+- **tool_config.py**: 100% ✅
+- **utils.py**: 100% ✅
+- **checker.py**: 94% ✅
+- **converter.py**: 92% ✅
+- **generator.py**: 82% ✅
+- **config.py**: 89% ✅
+- **cli.py**: 0% ❌ (Only remaining gap)
 
-**Focus Areas**:
-1. **cli.py** (0%) - Add integration tests for CLI commands
-2. **checker.py** (0%) - Tool validation logic needs tests
-3. **logger.py** (0%) - Test logging functionality
-4. **tool_config.py** (0%) - Test configuration management
-5. **converter.py** (49%) - Expand coverage of error paths and edge cases
-6. **utils.py** (35%) - Increase coverage on utility functions
-7. **generator.py** (69%) - Add tests for remaining edge cases
-8. **Fix failing test** - `test_generate_font_with_letters_has_correct_encodings` needs investigation
+**Focus**:
+Add integration tests for CLI commands in `test_cli.py`:
+1. `generate` command - Test font generation workflow
+2. `check` command - Test dependency checking
+3. Click argument parsing and validation
+4. Error handling and user feedback
+5. Output file creation and formats
 
 **Implementation**:
-- Write unit tests for each module
-- Add integration tests for full pipeline
-- Use pytest fixtures for temp files and mocking
-- Mock subprocess calls in converter tests
-- Add coverage tracking to CI/CD pipeline
+- Use Click's `CliRunner` for testing CLI commands
+- Mock file system operations with pytest fixtures
+- Test both success and error paths
+- Verify output messages and exit codes
 
 **Commands**:
 ```bash

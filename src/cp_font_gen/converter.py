@@ -114,6 +114,15 @@ def fix_bdf_encodings(
     (48, 49, 50... for '0', '1', '2'...). This fixes the BDF by replacing
     ENCODING values with the correct Unicode codepoints.
 
+    Issue #4: BDF files may use different text encodings depending on the generator:
+    - The BDF specification (X.org, Adobe) allows ASCII with ISO-8859-1 (Latin-1)
+      for X Window properties and metadata
+    - otf2bdf commonly outputs ISO-8859-1 encoded metadata, especially when fonts
+      contain copyright symbols (©), registered trademarks (®), or other extended
+      Latin characters in font metadata
+    - This function tries UTF-8 first (Python 3 default), then gracefully falls
+      back to Latin-1 if needed, preserving the original encoding when writing
+
     Args:
         bdf_path: Path to BDF file to fix
         chars: Set of characters that should be in the font
@@ -127,9 +136,20 @@ def fix_bdf_encodings(
         char_list = sorted(chars)
         codepoints = [ord(c) for c in char_list]
 
-        # Read BDF file
-        with open(bdf_path) as f:
-            lines = f.readlines()
+        # Try UTF-8 first (most common), fallback to Latin-1 (BDF spec allows it)
+        # See Issue #4: otf2bdf outputs Latin-1 for fonts with extended metadata
+        encoding_used = "utf-8"
+        try:
+            with open(bdf_path, encoding="utf-8") as f:
+                lines = f.readlines()
+        except UnicodeDecodeError:
+            # BDF spec allows ISO-8859-1 (Latin-1) for X Window properties
+            # Common when source fonts have © or ® symbols in metadata
+            if logger and logger.debug:
+                logger.info("BDF contains Latin-1 encoded bytes, using ISO-8859-1 encoding")
+            encoding_used = "latin-1"
+            with open(bdf_path, encoding="latin-1") as f:
+                lines = f.readlines()
 
         # Fix ENCODING values
         output_lines = []
@@ -154,8 +174,8 @@ def fix_bdf_encodings(
             else:
                 output_lines.append(line)
 
-        # Write fixed BDF
-        with open(bdf_path, "w") as f:
+        # Write back using the same encoding we read with (preserves data integrity)
+        with open(bdf_path, "w", encoding=encoding_used) as f:
             f.writelines(output_lines)
 
         return True
