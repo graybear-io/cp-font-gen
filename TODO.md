@@ -7,6 +7,18 @@ These items are prioritized and tracked for implementation after documentation r
 
 ---
 
+## ✅ COMPLETED: Issue #4 - BDF Latin-1 Encoding Fix (2025-11-30)
+Fixed UTF-8 encoding error when processing BDF files with Latin-1 metadata
+- **Problem**: Icons example failed with `'utf-8' codec can't decode byte 0xae`
+- **Solution**: Implemented defensive UTF-8 → Latin-1 fallback in `fix_bdf_encodings()`
+- **Testing**: Added `test_fix_bdf_encodings_handles_latin1_metadata()` test
+- **Documentation**: Complete fix documentation in `docs/issues/resolved/issue-4.md`
+- **Impact**: All examples now work (icons with Unicode symbols now generates successfully)
+- **Test count**: 114 tests passing (was 113)
+- **PR**: #5 (merged)
+
+---
+
 ## ✅ COMPLETED: Test Refactoring (2025-11-29)
 Successfully refactored and expanded test coverage from 29% → 67%
 - Created comprehensive test files: test_checker.py, test_converter.py, test_generator.py, test_logger.py, test_tool_config.py
@@ -20,8 +32,8 @@ Successfully refactored and expanded test coverage from 29% → 67%
 
 **Goal**: Reach 70%+ overall coverage by testing cli.py
 
-**Current Status** (as of 2025-11-29):
-- **Overall**: 67% (113 passed, 2 skipped)
+**Current Status** (as of 2025-11-30):
+- **Overall**: 67% (114 passed, 2 skipped)
 - **Remaining untested**: cli.py (143 statements, 0% coverage)
 
 **Module Coverage**:
@@ -52,6 +64,49 @@ Add integration tests for CLI commands in `test_cli.py`:
 ```bash
 just test-cov              # Check current coverage
 just test-watch            # Watch mode while writing tests
+```
+
+---
+
+## TODO: Set Up CI/CD and PyPI Publishing
+**Priority**: Infrastructure (High Value - ~1 day)
+
+**Goal**: Automate testing with CircleCI and enable PyPI package distribution
+
+**Phase 1: CircleCI Setup**
+- Create `.circleci/config.yml` for automated testing
+- Run tests on multiple Python versions (3.10, 3.11, 3.12)
+- Generate and upload coverage reports (codecov.io or coveralls)
+- Run on every push and PR
+- Badge for README showing build status
+
+**Phase 2: Package Configuration**
+- Ensure `pyproject.toml` is configured for distribution
+- Add package metadata (description, keywords, classifiers)
+- Configure entry points for CLI commands
+- Test local package building (`uv build`)
+
+**Phase 3: PyPI Publishing**
+- Test publishing to TestPyPI first
+- Configure PyPI token in CircleCI secrets
+- Set up CircleCI job to publish on tagged releases (e.g., `v1.0.0`)
+- Document release process for maintainers
+
+**Benefits**:
+- Automated testing ensures quality
+- Easy installation via `pip install cp-font-gen` or `uv add cp-font-gen`
+- Versioned releases with automated publishing
+- Coverage tracking over time
+
+**Commands**:
+```bash
+# Local testing
+uv build                    # Test package building
+uv run twine check dist/*   # Verify package metadata
+
+# CircleCI will handle
+pytest --cov                # Run tests with coverage
+twine upload dist/*         # Publish to PyPI (on tags)
 ```
 
 ---
