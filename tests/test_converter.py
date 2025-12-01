@@ -113,6 +113,56 @@ def test_fix_bdf_encodings_handles_various_characters(tmp_path):
     assert encodings == expected
 
 
+def test_fix_bdf_encodings_handles_latin1_metadata(tmp_path):
+    """Test fix_bdf_encodings with Latin-1 encoded BDF files (Issue #4).
+
+    Issue #4: BDF files from otf2bdf may contain Latin-1 encoded metadata
+    (e.g., © or ® symbols in font properties). The fix_bdf_encodings function
+    should gracefully handle these by trying UTF-8 first, then falling back
+    to Latin-1 encoding.
+
+    This test verifies:
+    1. Files with Latin-1 encoding can be read without errors
+    2. ENCODING values are still fixed correctly
+    3. The file is written back in Latin-1 (preserving original encoding)
+    4. Latin-1 metadata characters (©, ®) are preserved
+    """
+    from .conftest import create_test_bdf_with_latin1_metadata
+
+    bdf_file = tmp_path / "test_latin1.bdf"
+    create_test_bdf_with_latin1_metadata(bdf_file, num_chars=3)
+
+    # Verify file was created with Latin-1 encoding
+    # Try to read as UTF-8 - should fail
+    try:
+        with open(bdf_file, encoding="utf-8") as f:
+            f.read()
+        pytest.fail("File should not be readable as UTF-8 (contains Latin-1 bytes)")
+    except UnicodeDecodeError:
+        pass  # Expected - file contains Latin-1 bytes
+
+    # Now test that fix_bdf_encodings handles it correctly
+    chars = set("ABC")
+    success = fix_bdf_encodings(str(bdf_file), chars)
+    assert success, "fix_bdf_encodings should handle Latin-1 files"
+
+    # Verify encodings were fixed (should be 65, 66, 67 for A, B, C)
+    encodings = extract_bdf_encodings(bdf_file)
+    expected = [65, 66, 67]  # Unicode for 'A', 'B', 'C'
+    assert encodings == expected, (
+        f"Encodings should be fixed even for Latin-1 files.\n"
+        f"Expected: {expected}\n"
+        f"Got: {encodings}"
+    )
+
+    # Verify Latin-1 metadata is preserved (file should still be Latin-1)
+    with open(bdf_file, encoding="latin-1") as f:
+        content = f.read()
+        # Check that © and ® symbols are still present
+        assert "\xa9" in content, "Copyright symbol (©) should be preserved"
+        assert "\xae" in content, "Registered trademark (®) should be preserved"
+
+
 # =============================================================================
 # Regression Tests: Document Original Bug
 # =============================================================================
